@@ -21,7 +21,7 @@ impl<T> Default for Page<T> {
 }
 
 impl<T> Page<T> {
-    pub fn allocate(&mut self, value: T) -> Result<Slot, T> {
+    pub fn alloc(&mut self, value: T) -> Result<Slot, T> {
         let slot = self.allocated;
         if slot == PAGE_LEN {
             return Err(value);

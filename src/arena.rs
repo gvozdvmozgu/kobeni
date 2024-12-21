@@ -33,7 +33,7 @@ impl Arena {
             .or_insert_with(|| self.table.append_page::<T>());
 
         loop {
-            match self.table.page_mut(page).allocate(value) {
+            match self.table.page_mut(page).alloc(value) {
                 Ok(slot) => {
                     break Idx::new(page, slot);
                 }
