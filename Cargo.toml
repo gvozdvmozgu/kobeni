@@ -1,0 +1,7 @@
+[package]
+name = "kobeni"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tany = "0.1"
