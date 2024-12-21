@@ -2,6 +2,8 @@
 name = "kobeni"
 version = "0.1.0"
 edition = "2021"
+description = "An efficient and type-safe arena allocator for Rust, featuring fast memory allocation with unique u32-based indexing for heterogeneous types."
+license = "MIT"
 
 [dependencies]
 tany = "0.1"

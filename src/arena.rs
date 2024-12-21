@@ -1,6 +1,7 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use std::num::NonZeroU32;
 
 use crate::page::{PAGE_LEN_BITS, PAGE_LEN_MASK, Slot};
 use crate::table::{PageIndex, Table};
@@ -48,7 +49,7 @@ impl Arena {
 }
 
 pub struct Idx<T> {
-    raw: u32,
+    raw: NonZeroU32,
     phantom: PhantomData<T>,
 }
 
@@ -90,17 +91,26 @@ impl<T> std::fmt::Debug for Idx<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut type_name = std::any::type_name::<T>();
         type_name = type_name.split("::").last().unwrap_or(type_name);
-        write!(f, "Idx::<{}>({})", type_name, self.raw)
+        write!(f, "Idx::<{}>({})", type_name, self.as_usize())
     }
 }
 
 impl<T> Idx<T> {
     pub fn new(page: PageIndex, slot: Slot) -> Self {
-        Self { raw: page.as_u32() << PAGE_LEN_BITS | slot.as_u32(), phantom: PhantomData }
+        let raw = page.as_u32() << PAGE_LEN_BITS | slot.as_u32();
+        Self { raw: NonZeroU32::new(raw + 1).unwrap(), phantom: PhantomData }
+    }
+
+    pub fn as_u32(self) -> u32 {
+        self.raw.get() - 1
+    }
+
+    pub fn as_usize(self) -> usize {
+        self.as_u32() as usize
     }
 
     pub fn split(self) -> (PageIndex, Slot) {
-        let raw = self.raw as usize;
+        let raw = self.as_usize();
         let slot = raw & PAGE_LEN_MASK;
         let page = raw >> PAGE_LEN_BITS;
         (PageIndex::new(page), Slot::new(slot))
