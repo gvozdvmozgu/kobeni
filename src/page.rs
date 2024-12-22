@@ -1,4 +1,3 @@
-use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 
 pub const PAGE_LEN_BITS: usize = 10;
@@ -8,15 +7,12 @@ pub const MAX_PAGES: usize = 1 << (32 - PAGE_LEN_BITS);
 
 pub struct Page<T> {
     allocated: usize,
-    data: Box<[UnsafeCell<MaybeUninit<T>>; PAGE_LEN]>,
+    data: Box<[MaybeUninit<T>; PAGE_LEN]>,
 }
 
 impl<T> Default for Page<T> {
     fn default() -> Self {
-        Self {
-            allocated: 0,
-            data: Box::new([const { UnsafeCell::new(MaybeUninit::uninit()) }; PAGE_LEN]),
-        }
+        Self { allocated: 0, data: Box::new([const { MaybeUninit::uninit() }; PAGE_LEN]) }
     }
 }
 
@@ -27,8 +23,7 @@ impl<T> Page<T> {
             return Err(value);
         }
 
-        let data = &self.data[slot];
-        unsafe { (*data.get()).write(value) };
+        self.data[slot].write(value);
         self.allocated += 1;
 
         Ok(Slot::new(slot))
@@ -40,7 +35,7 @@ impl<T: 'static> std::ops::Index<Slot> for Page<T> {
 
     fn index(&self, slot: Slot) -> &Self::Output {
         assert!(slot.as_usize() < self.allocated);
-        unsafe { (*self.data[slot.as_usize()].get()).assume_init_ref() }
+        unsafe { self.data[slot.as_usize()].assume_init_ref() }
     }
 }
 
